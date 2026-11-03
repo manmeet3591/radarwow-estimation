@@ -1,7 +1,7 @@
-"""radar-wow stage 6: rain-rate estimators, vpr, blockage, hybrid scan.
+"""radar-wow stage 6: rain-rate estimators (R(Z), R(KDP), R(A), R(Z,ZDR), synthetic blend)."""
 
-Planned algorithms (see README): ZhangQi2010VPR, Bech2003Blockage, HybridScan.
-"""
+from . import coefficients
+from .rates import RainRateA, RainRateKDP, RainRateZZDR, SyntheticRainRate, ZRRelation, below_melting_layer
 
-PLANNED = ['ZhangQi2010VPR', 'Bech2003Blockage', 'HybridScan']
-__all__: list[str] = []
+PLANNED = ["DEMBeamBlockage", "HybridScan", "ZhangQi2010VPR", "Accumulation"]
+__all__ = ["RainRateA", "RainRateKDP", "RainRateZZDR", "SyntheticRainRate", "ZRRelation", "below_melting_layer", "coefficients"]
