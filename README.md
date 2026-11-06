@@ -18,6 +18,8 @@ Every algorithm is one class implementing one paper, with the same interface: it
 | VPR correction | `ZhangQi2010VPR` | Zhang & Qi 2010, J. Hydrometeor. | [doi:10.1175/2010JHM1201.1](https://doi.org/10.1175/2010JHM1201.1) | planned |
 | beam blockage | `DEMBeamBlockage` | Bech et al. 2003, JTECH | [doi:10.1175/1520-0426(2003)020<0845:TSOSPW>2.0.CO;2](https://doi.org/10.1175/1520-0426(2003)020<0845:TSOSPW>2.0.CO;2) | planned |
 | hybrid scan | `HybridScan` | Fulton et al. 1998 (WSR-88D) | [doi:10.1175/1520-0434(1998)013<0377:TWRA>2.0.CO;2](https://doi.org/10.1175/1520-0434(1998)013<0377:TWRA>2.0.CO;2) | planned |
+| accumulation (no advection) | `accumulate` | scan-hold accumulation |  | implemented + notebook |
+| advection-corrected accumulation | `AdvectionAccumulation` | pysteps optical flow (survey/03) |  | planned |
 
 ## Install
 

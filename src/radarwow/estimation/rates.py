@@ -18,8 +18,18 @@ from . import coefficients as co
 DIMS = ("azimuth", "range")
 
 
-def below_melting_layer(ds, freezing_level_km=None, ml_depth_km=0.5):
-    """True where the beam is below the melting-layer bottom (or everywhere if unknown)."""
+def below_melting_layer(ds, freezing_level_km=None, ml_depth_km=0.5, ml_bottom_km=None):
+    """True where the beam centre is below the melting-layer bottom (or everywhere if unknown).
+
+    Priority: ``ml_bottom_km`` (height above the radar, e.g. from radarwow.classification QVP detection),
+    then the file's ``height_over_iso0``, then ``freezing_level_km`` minus ``ml_depth_km``.
+    """
+    if ml_bottom_km is not None and np.isfinite(ml_bottom_km):
+        r = ds["range"].values
+        el = np.deg2rad(ds["elevation"].values if "elevation" in ds else np.zeros(ds.sizes["azimuth"]))
+        ke_re = 4.0 / 3.0 * 6371e3
+        beam_h = np.sqrt(r[None, :] ** 2 + ke_re ** 2 + 2 * r[None, :] * ke_re * np.sin(el[:, None])) - ke_re
+        return beam_h < ml_bottom_km * 1e3
     if "height_over_iso0" in ds:
         h = ds["height_over_iso0"].values
         return ~(np.isfinite(h) & (h > -ml_depth_km * 1e3))
@@ -46,7 +56,7 @@ class ZRRelation(Algorithm):
     requires = ("DBZH",)
     provides = ("RATE_Z",)
     notes = "Presets in coefficients.ZR_PRESETS (marshall_palmer, nexrad_convective, chennai_suresh2005), or pass a and b."
-    params = dict(preset="marshall_palmer", a=None, b=None, z_max_dbz=None, freezing_level_km=None)
+    params = dict(preset="marshall_palmer", a=None, b=None, z_max_dbz=None, freezing_level_km=None, ml_bottom_km=None)
 
     def run_sweep(self, ds, cfg):
         p = dict(co.ZR_PRESETS[self.params["preset"]])
@@ -57,7 +67,7 @@ class ZRRelation(Algorithm):
         if cap is not None:
             z = np.minimum(z, cap)
         r = (10 ** (0.1 * z) / a) ** (1.0 / b)
-        ok = signal_mask(ds) & below_melting_layer(ds, self.params["freezing_level_km"])
+        ok = signal_mask(ds) & below_melting_layer(ds, self.params["freezing_level_km"], ml_bottom_km=self.params.get("ml_bottom_km"))
         out = ds.copy()
         out["RATE_Z"] = _rate(np.where(ok, r, np.nan), {"relation": f"Z = {a} R^{b}", "source": p["source"]}, "rain rate from Z")
         return out
@@ -72,7 +82,7 @@ class RainRateKDP(Algorithm):
     requires = ("KDP",)
     provides = ("RATE_KDP",)
     notes = "Band defaults from coefficients.RKDP; presets nexrad_dpqpe and mrms_hail (S band). Negative KDP gives 0."
-    params = dict(preset=None, freezing_level_km=None)
+    params = dict(preset=None, freezing_level_km=None, ml_bottom_km=None)
 
     def run_sweep(self, ds, cfg):
         if self.params["preset"]:
@@ -83,7 +93,7 @@ class RainRateKDP(Algorithm):
             p = co.RKDP[cfg.band.value]
         k = np.clip(ds["KDP"].values.astype(float), 0, None)
         r = p["c"] * k ** p["d"]
-        ok = np.isfinite(ds["KDP"].values) & below_melting_layer(ds, self.params["freezing_level_km"])
+        ok = np.isfinite(ds["KDP"].values) & below_melting_layer(ds, self.params["freezing_level_km"], ml_bottom_km=self.params.get("ml_bottom_km"))
         out = ds.copy()
         out["RATE_KDP"] = _rate(np.where(ok, r, np.nan), {"relation": f"R = {p['c']} KDP^{p['d']}", "source": p["source"]}, "rain rate from KDP")
         return out
@@ -103,7 +113,7 @@ class RainRateA(Algorithm):
              "interpolated to temperature_c. Used only on rays whose delta PHIDP >= ra_min_dphi (band config): with a "
              "small total phase shift the attenuation is too small to measure and R(A) is dominated by noise. "
              "Also not used where PIA > ra_max_pia (ZPHI unstable on strongly attenuated paths).")
-    params = dict(temperature_c=10.0, freezing_level_km=None, min_dphi=None)
+    params = dict(temperature_c=10.0, freezing_level_km=None, ml_bottom_km=None, min_dphi=None)
 
     def run_sweep(self, ds, cfg):
         if "AH" not in ds:
@@ -117,7 +127,7 @@ class RainRateA(Algorithm):
         _, _, i0, i1 = rain_path(ds, cfg)
         dphi = path_dphi(phidp_rec(ds, cfg), i0, i1)
         min_dphi = self.params["min_dphi"] if self.params["min_dphi"] is not None else cfg["ra_min_dphi"]
-        ok = np.isfinite(a) & (dphi >= min_dphi)[:, None] & below_melting_layer(ds, self.params["freezing_level_km"])
+        ok = np.isfinite(a) & (dphi >= min_dphi)[:, None] & below_melting_layer(ds, self.params["freezing_level_km"], ml_bottom_km=self.params.get("ml_bottom_km"))
         if "PIA" in ds:  # ZPHI amplifies noise where the path is strongly attenuated
             ok &= ds["PIA"].values <= cfg["ra_max_pia"]
         out = ds.copy()
@@ -136,14 +146,14 @@ class RainRateZZDR(Algorithm):
     requires = ("DBZH", "ZDR")
     provides = ("RATE_ZZDR",)
     notes = "S band only (NEXRAD DP-QPE coefficients); needs calibrated ZDR: a 0.2 dB ZDR bias changes R by ~15 %."
-    params = dict(freezing_level_km=None)
+    params = dict(freezing_level_km=None, ml_bottom_km=None)
 
     def run_sweep(self, ds, cfg):
         p = co.RZZDR["S"]
         z = 10 ** (0.1 * ds["DBZH"].values.astype(float))
         zdr = 10 ** (0.1 * ds["ZDR"].values.astype(float))
         r = p["g"] * z ** p["h"] * zdr ** p["k"]
-        ok = signal_mask(ds) & np.isfinite(r) & below_melting_layer(ds, self.params["freezing_level_km"])
+        ok = signal_mask(ds) & np.isfinite(r) & below_melting_layer(ds, self.params["freezing_level_km"], ml_bottom_km=self.params.get("ml_bottom_km"))
         out = ds.copy()
         out["RATE_ZZDR"] = _rate(np.where(ok, r, np.nan), {"relation": f"R = {p['g']} Z^{p['h']} ZDR^{p['k']}", "source": p["source"]},
                                  "rain rate from Z and ZDR")
@@ -166,15 +176,16 @@ class SyntheticRainRate(Algorithm):
     notes = ("Per gate, below the melting layer: R(KDP) where Z >= z_hail_dbz (hail possible), else R(A) where A_H is "
              "defined, else R(Z) with Z capped at z_max_dbz (53 dBZ, the WSR-88D hail cap of Fulton et al. 1998). The MRMS 50 km blending zone and evaporation correction are not implemented. "
              "Works with Z only (single-pol data) by falling back to R(Z).")
-    params = dict(z_hail_dbz=50.0, zr_preset="marshall_palmer", z_max_dbz=53.0, temperature_c=10.0, freezing_level_km=None)
+    params = dict(z_hail_dbz=50.0, zr_preset="marshall_palmer", z_max_dbz=53.0, temperature_c=10.0, freezing_level_km=None, ml_bottom_km=None)
 
     def run_sweep(self, ds, cfg):
         p = self.params
-        out = ZRRelation(preset=p["zr_preset"], z_max_dbz=p["z_max_dbz"], freezing_level_km=p["freezing_level_km"])(ds, band=cfg)
+        ml = dict(freezing_level_km=p["freezing_level_km"], ml_bottom_km=p["ml_bottom_km"])
+        out = ZRRelation(preset=p["zr_preset"], z_max_dbz=p["z_max_dbz"], **ml)(ds, band=cfg)
         if "PHIDP" in ds:
-            out = RainRateA(temperature_c=p["temperature_c"], freezing_level_km=p["freezing_level_km"])(out, band=cfg)
+            out = RainRateA(temperature_c=p["temperature_c"], **ml)(out, band=cfg)
         if "KDP" in out:
-            out = RainRateKDP(freezing_level_km=p["freezing_level_km"])(out, band=cfg)
+            out = RainRateKDP(**ml)(out, band=cfg)
         z = ds["DBZH"].values
         rz = out["RATE_Z"].values
         ra = out["RATE_A"].values if "RATE_A" in out else np.full(z.shape, np.nan)
