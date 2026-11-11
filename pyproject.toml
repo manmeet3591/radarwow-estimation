@@ -13,6 +13,7 @@ dependencies = ["radarwow-core @ git+https://github.com/manmeet3591/radarwow-cor
 
 [project.optional-dependencies]
 advection = ["pysteps", "opencv-python-headless"]
+blockage = ["rasterio", "boto3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
