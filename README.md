@@ -14,6 +14,7 @@ Every algorithm is one class implementing one paper, with the same interface: it
 | R(A) | `RainRateA` | Ryzhkov, Diederich, Zhang & Simmer 2014, JTECH | [doi:10.1175/JTECH-D-13-00038.1](https://doi.org/10.1175/JTECH-D-13-00038.1) | implemented + notebook |
 | R(Z,ZDR) (S band) | `RainRateZZDR` | Ryzhkov, Giangrande & Schuur 2005; NEXRAD DP-QPE coefficients | [doi:10.1175/JAM2213.1](https://doi.org/10.1175/JAM2213.1) | implemented + notebook |
 | synthetic blend | `SyntheticRainRate` | Zhang et al. 2020, J. Hydrometeor. (MRMS logic) | [doi:10.1175/JHM-D-19-0194.1](https://doi.org/10.1175/JHM-D-19-0194.1) | implemented + notebook |
+| drop-size-adaptive alpha for R(A) | `ZDRSlopeAlpha` | Wang et al. 2019, J. Hydrometeor.; formula as in Grams et al. 2019 (NEXRAD Build 19) | [doi:10.1175/JHM-D-18-0071.1](https://doi.org/10.1175/JHM-D-18-0071.1) | implemented + notebook |
 | HCA-driven rate | `HCADrivenRainRate` | Giangrande & Ryzhkov 2008; NEXRAD Build 18/19 table (Grams et al. 2019) | [doi:10.1175/2008JAMC1753.1](https://doi.org/10.1175/2008JAMC1753.1) | planned |
 | VPR correction | `ZhangQi2010VPR` | Zhang & Qi 2010, J. Hydrometeor. | [doi:10.1175/2010JHM1201.1](https://doi.org/10.1175/2010JHM1201.1) | implemented + notebook |
 | beam blockage | `Bech2003BeamBlockage` | Bech et al. 2003, JTECH; Copernicus GLO-90 terrain | [doi:10.1175/1520-0426(2003)020<0845:TSOSPW>2.0.CO;2](https://doi.org/10.1175/1520-0426(2003)020<0845:TSOSPW>2.0.CO;2) | implemented + notebook |
@@ -33,6 +34,7 @@ pip install git+https://github.com/manmeet3591/radarwow-core git+https://github.
 - Used and checked in the [radarwow-verify notebook `02_ktlx_20220505_vpr.ipynb`](https://github.com/manmeet3591/radarwow-verify/blob/main/notebooks/02_ktlx_20220505_vpr.ipynb)
 - Used and checked in the [radarwow-verify notebook `03_ktlx_20220505_advection.ipynb`](https://github.com/manmeet3591/radarwow-verify/blob/main/notebooks/03_ktlx_20220505_advection.ipynb)
 - Used and checked in the [radarwow-verify notebook `04_kdax_20211024_blockage.ipynb`](https://github.com/manmeet3591/radarwow-verify/blob/main/notebooks/04_kdax_20211024_blockage.ipynb)
+- Used and checked in the [radarwow-verify notebook `05_adaptive_alpha.ipynb`](https://github.com/manmeet3591/radarwow-verify/blob/main/notebooks/05_adaptive_alpha.ipynb)
 
 ## Results
 
