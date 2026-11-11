@@ -3,7 +3,7 @@
 Each scan's rate is held from its start time until the next scan starts (at most ``max_gap_min``),
 and the part of that interval inside the accumulation window is added. This is the simplest scheme
 ("Eulerian, no advection"): fast-moving cells leave stripes when scans are minutes apart. Advection-
-corrected accumulation (pysteps optical flow) is planned.
+corrected accumulation is in `advection.py`.
 """
 
 from __future__ import annotations
@@ -62,8 +62,9 @@ def accumulate(scans, start, end, max_gap_min: float = 15.0):
         raise ValueError("no scans inside the window")
     window_h = (end - start).total_seconds() / 3600.0
     ref = scans[0][1]
-    out = xr.Dataset({"ACCUM": (("azimuth", "range"), acc.astype("float32"), {"units": "mm"}),
-                      "VALID_MINUTES": (("azimuth", "range"), valid_min.astype("float32"))},
-                     coords={"azimuth": ref["azimuth"].values, "range": ref["range"].values},
+    dims = ref.dims  # (azimuth, range) for polar scans, (y, x) for Cartesian grids
+    out = xr.Dataset({"ACCUM": (dims, acc.astype("float32"), {"units": "mm"}),
+                      "VALID_MINUTES": (dims, valid_min.astype("float32"))},
+                     coords={d: ref[d].values for d in dims},
                      attrs={"start": str(start), "end": str(end), "coverage": covered / window_h, "n_scans": len(scans)})
     return out

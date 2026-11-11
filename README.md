@@ -19,7 +19,7 @@ Every algorithm is one class implementing one paper, with the same interface: it
 | beam blockage | `DEMBeamBlockage` | Bech et al. 2003, JTECH | [doi:10.1175/1520-0426(2003)020<0845:TSOSPW>2.0.CO;2](https://doi.org/10.1175/1520-0426(2003)020<0845:TSOSPW>2.0.CO;2) | planned |
 | hybrid scan | `HybridScan` | Fulton et al. 1998 (WSR-88D) | [doi:10.1175/1520-0434(1998)013<0377:TWRA>2.0.CO;2](https://doi.org/10.1175/1520-0434(1998)013<0377:TWRA>2.0.CO;2) | planned |
 | accumulation (no advection) | `accumulate` | scan-hold accumulation |  | implemented + notebook |
-| advection-corrected accumulation | `AdvectionAccumulation` | pysteps optical flow (survey/03) |  | planned |
+| advection-corrected accumulation | `advection_accumulate` | Anagnostou & Krajewski 1999, JTECH; pysteps Lucas-Kanade (Pulkkinen et al. 2019) | [doi:10.1175/1520-0426(1999)016<0189:RTRREP>2.0.CO;2](https://doi.org/10.1175/1520-0426(1999)016<0189:RTRREP>2.0.CO;2) | implemented + notebook |
 
 ## Install
 
@@ -31,6 +31,7 @@ pip install git+https://github.com/manmeet3591/radarwow-core git+https://github.
 
 - [`notebooks/01_rain_rate_s_c_x.ipynb`](notebooks/01_rain_rate_s_c_x.ipynb): open in Colab via `https://colab.research.google.com/github/manmeet3591/radarwow-estimation/blob/main/notebooks/01_rain_rate_s_c_x.ipynb`
 - Used and checked in the [radarwow-verify notebook `02_ktlx_20220505_vpr.ipynb`](https://github.com/manmeet3591/radarwow-verify/blob/main/notebooks/02_ktlx_20220505_vpr.ipynb)
+- Used and checked in the [radarwow-verify notebook `03_ktlx_20220505_advection.ipynb`](https://github.com/manmeet3591/radarwow-verify/blob/main/notebooks/03_ktlx_20220505_advection.ipynb)
 
 ## Results
 

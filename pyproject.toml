@@ -11,6 +11,9 @@ license = {text = "MIT"}
 requires-python = ">=3.10"
 dependencies = ["radarwow-core @ git+https://github.com/manmeet3591/radarwow-core", "radarwow-kdp @ git+https://github.com/manmeet3591/radarwow-kdp", "radarwow-attenuation @ git+https://github.com/manmeet3591/radarwow-attenuation", "numpy", "scipy", "xarray"]
 
+[project.optional-dependencies]
+advection = ["pysteps", "opencv-python-headless"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 namespaces = true
