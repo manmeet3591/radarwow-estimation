@@ -130,6 +130,8 @@ class RainRateA(Algorithm):
         ok = np.isfinite(a) & (dphi >= min_dphi)[:, None] & below_melting_layer(ds, self.params["freezing_level_km"], ml_bottom_km=self.params.get("ml_bottom_km"))
         if "PIA" in ds:  # ZPHI amplifies noise where the path is strongly attenuated
             ok &= ds["PIA"].values <= cfg["ra_max_pia"]
+        if "PHASE_CONSISTENT" in ds:  # PHIDP rise far larger than the Z can explain: not rain attenuation
+            ok &= ds["PHASE_CONSISTENT"].values.astype(bool)[:, None]
         out = ds.copy()
         out["RATE_A"] = _rate(np.where(ok, r, np.nan), {"relation": f"R = {e:.1f} A^{f:.3f} ({self.params['temperature_c']} C)",
                                                        "source": co.RA_SOURCE}, "rain rate from specific attenuation")
